@@ -3,6 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 
 	//"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
@@ -54,6 +57,11 @@ var (
 	maxBinlogSize     int64
 )
 
+var DefaultInitSqls = []string{
+	"SET @@GLOBAL.SQL_MODE = '';",
+	"SET @@SESSION.SQL_MODE = '';",
+}
+
 var (
 	AllMode  = "all"
 	FullMode = "full"
@@ -84,7 +92,42 @@ func init() {
 	flag.Int64Var(&maxBinlogSize, "max-binlog-size", 1073741824, "max binlog size")
 }
 
+func adjustTaskMode() {
+	if taskMode != FullMode {
+		taskMode = AllMode
+	}
+}
+
+func SetupNotify() chan<- os.Signal {
+	sc := make(chan os.Signal, 1)
+
+	signal.Notify(sc,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+
+	go func() {
+		sig := <-sc
+		log.Infof("[binlog] Got signal [%s] to exist.", sig)
+		//cancel()
+		os.Exit(0)
+	}()
+
+	return sc
+}
+
 func main() {
 	log.Infof("Second commit (￣◇￣;)")
 	fmt.Println("First commit (((o(*ﾟ▽ﾟ*)o)))")
+
+	// parse the fucking flags
+	flag.Parse()
+
+	signalChan := SetupNotify()
+
+	// TODO: This fucking init-sqls is placed in `base_task.go`, please place it to better place.
+	DefaultInitSqls = append(DefaultInitSqls, fmt.Sprintf("SET @@GLOBAL.MAX_BINLOG_SIZE = %d;", maxBinlogSize))
+
+	signalChan <- syscall.SIGINT
 }
