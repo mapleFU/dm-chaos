@@ -9,6 +9,7 @@ import (
 
 	//"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
+	//"github.com/juju/errors"
 )
 
 // Config.toml in `sync_diff_inspector` need to know the config of database,
@@ -24,13 +25,18 @@ type DBConfig struct {
 	instanceId string
 }
 
+type replicationMySQL struct {
+	hosts   []string
+	current int
+}
+
 var (
 	mysqlFlavor       string
 	mysqlVersion      string
 
 	// The address of mysql server.
 	// The count was initialized as one, but we may add more.
-	mysqlAddress string
+	mysqlAddress arrayFlags
 
 	dmWorkerCount     int
 	dmCaseCount       int
@@ -90,6 +96,20 @@ func init() {
 	flag.BoolVar(&failResume, "fail-resume", false, "use fail resume test case")
 	flag.BoolVar(&enableGTID, "enable-gtid", false, "enable GTID")
 	flag.Int64Var(&maxBinlogSize, "max-binlog-size", 1073741824, "max binlog size")
+
+	flag.Var(&mysqlAddress, "mysql-address", "Some description for this param.")
+}
+
+
+type arrayFlags []string
+
+func (i *arrayFlags) String() string {
+	return "my string representation"
+}
+
+func (i *arrayFlags) Set(value string) error {
+	*i = append(*i, value)
+	return nil
 }
 
 func adjustTaskMode() {
@@ -117,6 +137,7 @@ func SetupNotify() chan<- os.Signal {
 	return sc
 }
 
+
 func main() {
 	log.Infof("Second commit (￣◇￣;)")
 	fmt.Println("First commit (((o(*ﾟ▽ﾟ*)o)))")
@@ -124,10 +145,17 @@ func main() {
 	// parse the fucking flags
 	flag.Parse()
 
-	signalChan := SetupNotify()
+	//signalChan := SetupNotify()
+	_ = SetupNotify()
 
 	// TODO: This fucking init-sqls is placed in `base_task.go`, please place it to better place.
 	DefaultInitSqls = append(DefaultInitSqls, fmt.Sprintf("SET @@GLOBAL.MAX_BINLOG_SIZE = %d;", maxBinlogSize))
 
-	signalChan <- syscall.SIGINT
+	// Deploy is a deploy config segment in dm-master.toml, 包括 source-id 和 dm-worker
+	//var deploys []*Deploy
+	// dm-workers
+	//var workers []string
+	// mysql database info,
+	//mysqls := make(map[int]*replicationMySQL)
+	// previous testing just setting up a fucking mysql. Here we just do a sequential map
 }
