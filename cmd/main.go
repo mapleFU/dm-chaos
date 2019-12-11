@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	//"github.com/joho/godotenv"
+	"github.com/juju/errors"
 	log "github.com/sirupsen/logrus"
 	//"github.com/juju/errors"
 )
@@ -151,11 +152,21 @@ func main() {
 	// TODO: This fucking init-sqls is placed in `base_task.go`, please place it to better place.
 	DefaultInitSqls = append(DefaultInitSqls, fmt.Sprintf("SET @@GLOBAL.MAX_BINLOG_SIZE = %d;", maxBinlogSize))
 
-	// Deploy is a deploy config segment in dm-master.toml, 包括 source-id 和 dm-worker
-	//var deploys []*Deploy
-	// dm-workers
-	//var workers []string
-	// mysql database info,
-	//mysqls := make(map[int]*replicationMySQL)
-	// previous testing just setting up a fucking mysql. Here we just do a sequential map
+	// init mysql address as :3306
+	// localhost and mysql
+	mysqlAddress1 := "49.235.195.198"
+	mysqlAddress2 := "maplewish.cn"
+	tidbAddress := "127.0.0.1"
+
+	testMysqlAddress := make([]string, 0)
+	testMysqlAddress = append(testMysqlAddress, mysqlAddress1)
+	testMysqlAddress = append(testMysqlAddress, mysqlAddress2)
+
+	tidbConn, mysqlDBConn, err := initialDBs(tidbAddress, testMysqlAddress)
+
+	if err != nil {
+		panic(errors.ErrorStack(err))
+	}
+
+	log.Infof("tidbConn is %v, mysqlDBConn is %v", tidbConn, mysqlDBConn)
 }

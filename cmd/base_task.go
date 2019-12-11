@@ -13,93 +13,6 @@ import (
 )
 
 
-// TODO: use template to make parameter more clear
-// This cfg is using to drive checker.
-var baseTaskCfg = `
-name: {{.TaskName}}
-task-mode: {{.TaskMode}}
-meta-schema: dm_meta
-disable-heartbeat: true
-online-ddl-scheme: {{.OnlineDDLScheme}}
-remove-meta: {{.RemoveMeta}}
-target-database:
-  host: {{.Host}}
-  port: 4000
-  user: root
-  password: ""
-mysql-instances:
-{{.MySQLInstances}}
-is-sharding: true
-filters:
-  user-filter-1:
-    schema-pattern: "test_*"
-    table-pattern: "tf_*"
-    events: ["delete"]
-    action: Ignore
-routes:
-  sharding-route-rules-table:
-    schema-pattern: test_*
-    table-pattern: t_*
-    target-schema: test_target_{{.SchemaIndex}}
-    target-table: t_target
-  sharding-route-rules-schema:
-    schema-pattern: test_*
-    target-schema: test_target_{{.SchemaIndex}}
-column-mappings:
-{{.ColumnMappingRules}}
-black-white-list:
-  instance:
-    do-dbs: ["test_{{.SchemaIndex}}", "do"]
-    do-tables:
-    - db-name: "test_{{.SchemaIndex}}"
-      tbl-name: "~^t_[1-5]"
-    - db-name: "test_{{.SchemaIndex}}"
-      tbl-name: "~^tf_.*"
-`
-
-// each test case shares same column mapping now, but they use different schemas.
-// instance-<instanceID>-<ruleID>
-var columnMappingTpl = `
-  instance-{{.InstanceID}}-{{.RuleID1}}:
-    schema-pattern: "test_*"
-    table-pattern: "t_*"
-    expression: "partition id"
-    source-column: "id"
-    target-column: "id"
-    arguments: ["{{.InstanceID}}", "test_", "t_"]
-  instance-{{.InstanceID}}-{{.RuleID2}}:
-    schema-pattern: "test_*"
-    table-pattern: "tf_*"
-    expression: "partition id"
-    source-column: "id"
-    target-column: "id"
-    arguments: ["{{.InstanceID}}", "test_", "tf_"]`
-
-var subTaskCfg = `
-- source-id: {{.SourceHost}}:3306
-  meta: null
-  filter-rules: ["user-filter-1"]
-  column-mapping-rules: [{{.ColumnMappingRules}}]
-  route-rules: ["sharding-route-rules-table","sharding-route-rules-schema"]
-  black-white-list: "instance"
-  mydumper:
-    mydumper-path: /dm-worker/bin/mydumper
-    threads: 4
-    chunk-filesize: 8
-    skip-tz-utc: true
-    extra-args: "-B test_{{.SchemaIndex}}"
-  loader:
-    pool-size: 32
-    dir: ./dumped_data{{.SchemaIndex}}
-  syncer:
-    meta-file: ""
-    worker-count: 32
-    batch: 2000
-    max-retry: 200
-    disable-detect: false
-    safe-mode: false
-`
-
 var baseTaskCfgNonSharding = `
 name: {{.TaskName}}
 task-mode: {{.TaskMode}}
@@ -216,15 +129,15 @@ func writeTaskConfigFile(cfg string, filename string) error {
 }
 
 func getSubTaskTables(caseID, instID int) []string {
-	if isNonShardingCase(caseID) {
-		if instID == 1 {
-			return instanceTables[1]
-		}
-		return []string{fmt.Sprintf("tf_%d", instID)}
+	//if isNonShardingCase(caseID) {
+	if instID == 1 {
+		return instanceTables[1]
 	}
-	caseTurn := caseID%2 + 1
-	idx := (instID-1)%len(instanceTablesFix[caseTurn]) + 1
-	return instanceTablesFix[caseTurn][idx]
+	return []string{fmt.Sprintf("tf_%d", instID)}
+	//}
+	//caseTurn := caseID%2 + 1
+	//idx := (instID-1)%len(instanceTablesFix[caseTurn]) + 1
+	//return instanceTablesFix[caseTurn][idx]
 }
 
 func tryEnableGTID(dbs ...*sql.DB) error {
