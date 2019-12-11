@@ -59,7 +59,7 @@ ifeq ("$(WITH_CHECK)", "1")
 endif
 
 server:
-	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o bin/cmd cmd/main.go
+	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o bin/cmd cmd/*.go
 
 fmt:
 	@echo "gofmt (simplify)"
