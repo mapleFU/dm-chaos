@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"github.com/mapleFU/dm-chaos/clients/dmctl"
+	"github.com/mapleFU/dm-chaos/clients/dmctl/pb"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -142,9 +146,6 @@ func SetupNotify() chan<- os.Signal {
 
 
 func main() {
-	log.Infof("Second commit (￣◇￣;)")
-	fmt.Println("First commit (((o(*ﾟ▽ﾟ*)o)))")
-
 	// parse the fucking flags
 	flag.Parse()
 
@@ -178,8 +179,8 @@ func main() {
 	//dmWorker2Host := "127.0.0.1"
 	//dmWorker2Port := "8263"
 
-	// done flag
-	//done := make(chan struct{})
+	dmMasterHost := "127.0.0.1"
+	dmMasterPort := 8261
 
 	// drive ycsb to inserting datas
 	// this part will insert large
@@ -203,5 +204,45 @@ func main() {
 
 	wg.Wait()
 
+	ctl, err := dmctl.CreateDMMasterCtl(fmt.Sprintf("%s:%d", dmMasterHost, dmMasterPort))
+	if err != nil {
+		panic(errors.ErrorStack(err))
+	}
+	data, err := ioutil.ReadFile("task-template")
+	if err != nil {
+		panic(err)
+	}
+	fileTemplate := string(data)
+
+	err = ctl.StartTask(context.Background(), fileTemplate, nil)
+	if err != nil {
+		panic(errors.ErrorStack(err))
+	}
+	resp, err := ctl.QueryStatus(context.Background(), "test")
+	if err != nil {
+		panic(errors.ErrorStack(err))
+	}
+
+
+	finished := false
+	for finished != true {
+		tag := true
+		for _, v := range resp {
+			for _, task := range v.SubTaskStatus {
+				if task.GetStage() != pb.Stage_Finished {
+					tag = false
+					break
+				}
+				if task.GetStage() == pb.Stage_InvalidStage {
+					panic("In invalid stage now")
+				}
+			}
+		}
+		if tag {
+			finished = true
+		}
+	}
+
+	// calling check split checker
 
 }
