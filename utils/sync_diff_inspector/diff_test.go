@@ -17,7 +17,7 @@ import (
 	"testing"
 
 	. "github.com/pingcap/check"
-	"github.com/pingcap/schrodinger-test/pkg/dbutil"
+	"github.com/mapleFU/dm-chaos/utils/dbutil"
 )
 
 func TestClient(t *testing.T) {

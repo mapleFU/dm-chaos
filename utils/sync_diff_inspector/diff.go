@@ -28,7 +28,7 @@ import (
 	"github.com/juju/errors"
 	"github.com/ngaut/log"
 	"github.com/pingcap/parser/model"
-	"github.com/pingcap/schrodinger-test/pkg/dbutil"
+	"github.com/mapleFU/dm-chaos/utils/dbutil"
 	"github.com/pingcap/tidb/types"
 )
 

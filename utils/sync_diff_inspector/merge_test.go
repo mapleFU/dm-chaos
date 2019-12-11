@@ -18,7 +18,7 @@ import (
 	"strconv"
 
 	. "github.com/pingcap/check"
-	"github.com/pingcap/schrodinger-test/pkg/dbutil"
+	"github.com/mapleFU/dm-chaos/utils/dbutil"
 )
 
 var _ = Suite(&testMergerSuite{})

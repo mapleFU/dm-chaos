@@ -232,7 +232,7 @@ func isNonShardingCase(caseID int) bool {
 }
 
 //
-func loadTaskScript() string {
+func LoadTaskScript() string {
 	panic("implement me")
 	return ""
 }
