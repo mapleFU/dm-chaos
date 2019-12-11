@@ -186,7 +186,6 @@ func main() {
 	var wg sync.WaitGroup
 	for _, mysqlAdd := range testMysqlAddress {
 		wg.Add(1)
-		//prefix := "/Users/fuasahi/GoglandProjects/src/github.com/mapleFU/dm-chaos"
 		go func(remoteAddress string) {
 			defer wg.Done()
 

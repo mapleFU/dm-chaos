@@ -31,25 +31,10 @@ mysql-instances:
 is-sharding: false
 filters:
   user-filter-1:
-    schema-pattern: "test_*"
+    schema-pattern: "test*"
     table-pattern: "tf_*"
     events: ["delete"]
     action: Ignore
-routes:
-  nonsharding-route-rules-schema:
-    schema-pattern: test_*
-    target-schema: test_target_{{.SchemaIndex}}
-black-white-list:
-  instance:
-    do-dbs: ["test_{{.SchemaIndex}}"]
-    do-tables:
-    - db-name: "test_{{.SchemaIndex}}"
-      tbl-name: "~^t_[1-5]"
-  instance2:
-    do-dbs: ["test_{{.SchemaIndex}}"]
-    do-tables:
-    - db-name: "test_{{.SchemaIndex}}"
-      tbl-name: "~^tf_.*"
 `
 
 var subTaskCfgNonSharding = `
@@ -57,7 +42,6 @@ var subTaskCfgNonSharding = `
   meta: null
   filter-rules: ["user-filter-1"]
   route-rules: ["nonsharding-route-rules-schema"]
-  black-white-list: "{{.BlackWhiteList}}"
   mydumper:
     mydumper-path: /dm-worker/bin/mydumper
     threads: 4
@@ -247,3 +231,8 @@ func isNonShardingCase(caseID int) bool {
 	return caseID == 1
 }
 
+//
+func loadTaskScript() string {
+	panic("implement me")
+	return ""
+}
