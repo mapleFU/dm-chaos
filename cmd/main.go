@@ -4,7 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	//"github.com/joho/godotenv"
@@ -169,4 +171,38 @@ func main() {
 	}
 
 	log.Infof("tidbConn is %v, mysqlDBConn is %v", tidbConn, mysqlDBConn)
+
+	//dmWorker1Host := "127.0.0.1"
+	//dmWorker1Port := "8262"
+	//
+	//dmWorker2Host := "127.0.0.1"
+	//dmWorker2Port := "8263"
+
+	// done flag
+	//done := make(chan struct{})
+
+	// drive ycsb to inserting datas
+	// this part will insert large
+	var wg sync.WaitGroup
+	for _, mysqlAdd := range testMysqlAddress {
+		wg.Add(1)
+		//prefix := "/Users/fuasahi/GoglandProjects/src/github.com/mapleFU/dm-chaos"
+		go func(remoteAddress string) {
+			defer wg.Done()
+
+			cmd := exec.Command("bash", "-c", fmt.Sprintf("bin/go-ycsb run mysql -P workload -p mysql.host=%v  -p mysql.port=3306", remoteAddress))
+			cmd.Stdout = os.Stdout
+			if err := cmd.Start(); err != nil {
+				log.Panic(err)
+			}
+
+			if err := cmd.Wait(); err != nil {
+				log.Panic(err)
+			}
+		}(mysqlAdd)
+	}
+
+	wg.Wait()
+
+
 }

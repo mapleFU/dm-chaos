@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	SourceDB string = "source_db"
-	TargetDB string = "target_db"
+	SourceDB string = "test"
+	TargetDB string = "test"
 )
 
 var dbCnt int

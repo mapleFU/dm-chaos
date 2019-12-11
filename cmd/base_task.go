@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/mapleFU/dm-chaos/clients"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"strings"
 
@@ -130,10 +131,10 @@ func writeTaskConfigFile(cfg string, filename string) error {
 
 func getSubTaskTables(caseID, instID int) []string {
 	//if isNonShardingCase(caseID) {
-	if instID == 1 {
-		return instanceTables[1]
-	}
-	return []string{fmt.Sprintf("tf_%d", instID)}
+	//if instID == 1 {
+	//	return instanceTables[1]
+	//}
+	return []string{fmt.Sprintf("tf_%d", instID), fmt.Sprintf("test")}
 	//}
 	//caseTurn := caseID%2 + 1
 	//idx := (instID-1)%len(instanceTablesFix[caseTurn]) + 1
@@ -165,6 +166,7 @@ func initialTaskTables(caseID int, mysqls []*sql.DB, schema string) error {
 	for idx, db := range mysqls {
 		instID := idx + 1
 		for _, t := range getSubTaskTables(caseID, instID) {
+			log.Infof("creating %v in db %v", t, idx)
 			err := clients.CreateNewTable(db, schema, t)
 			if err != nil {
 				return errors.Trace(err)
