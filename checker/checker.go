@@ -33,7 +33,7 @@ func ycsbInsertPhase(ycsbBianry string, sourceHosts []string)  {
 			defer wg.Done()
 
 			cmd := exec.Command("bash", "-c",
-				fmt.Sprintf("%v run mysql -P workload -p mysql.host=%v  -p mysql.port=3306 -tablename=usertable%d",
+				fmt.Sprintf("%v run mysql -P workload -p mysql.host=%v -p mysql.port=3306 -tablename=usertable%d",
 					ycsbBianry, remoteAddress, mysqlCnt))
 			if err := cmd.Start(); err != nil {
 				log.Panic(err)
@@ -54,7 +54,7 @@ func taskStartPhase(sourceHosts []string, targetHost string, ctl *dmctl.DMMaster
 		if err != nil {
 			panic(errors.ErrorStack(err))
 		}
-		err = ctl.StartTask(context.Background(), fileTemplate, nil)
+		err = ctl.StartTaskWithContent(context.Background(), fileTemplate, nil)
 		if err != nil {
 			panic(errors.ErrorStack(err))
 		}
@@ -65,9 +65,15 @@ func waitForFinishingPhase(sourceHosts []string, ctl *dmctl.DMMasterCtl)  {
 	var wg sync.WaitGroup
 	for i := 0; i < len(sourceHosts); i++ {
 		wg.Add(1)
-		go func() {
+		go func(taskId int) {
+			taskName := fmt.Sprintf("test%d", taskId)
 			defer wg.Done()
-			resp, err := ctl.QueryStatus(context.Background(), "test")
+			defer func() {
+				if r := recover(); r != nil {
+					ctl.StopTask(context.Background(), taskName, nil)
+				}
+			}()
+			resp, err := ctl.QueryStatus(context.Background(), taskName)
 			if err != nil {
 				panic(errors.ErrorStack(err))
 			}
@@ -81,7 +87,7 @@ func waitForFinishingPhase(sourceHosts []string, ctl *dmctl.DMMasterCtl)  {
 							tag = false
 							break
 						}
-						if task.GetStage() == pb.Stage_InvalidStage {
+						if task.GetStage() == pb.Stage_InvalidStage || task.GetStage() == pb.Stage_Paused {
 							panic("In invalid stage now")
 						}
 					}
@@ -91,7 +97,7 @@ func waitForFinishingPhase(sourceHosts []string, ctl *dmctl.DMMasterCtl)  {
 				}
 			}
 			time.Sleep(1 * time.Second)
-		}()
+		}(i)
 	}
 	// waiting all
 	wg.Wait()
@@ -119,6 +125,7 @@ func CheckDM(sourceHosts []string, targetHost, dmMasterHost string, dmMasterPort
 
 	taskStartPhase(sourceHosts, targetHost, ctl)
 
+	log.Infof("Enter waiting for finishing phase")
 	waitForFinishingPhase(sourceHosts, ctl)
 
 	// calling check split checker

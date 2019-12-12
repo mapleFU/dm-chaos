@@ -23,7 +23,7 @@ func TaskTemplate()  {
 // target should be an tidb at 4000.
 func SyncSplitTemplate(sourceHost, targetHost string, tableId int) (string, error) {
 
-	t, err := template.ParseFiles("../config-template.toml")
+	t, err := template.ParseFiles("config-template.toml")
 	if err != nil {
 		return "", err
 	}
@@ -43,7 +43,7 @@ func SyncSplitTemplate(sourceHost, targetHost string, tableId int) (string, erro
 }
 
 func TaskTemplateRender(targetHost string, taskId int) (string, error) {
-	t, err := template.ParseFiles("../task-template.yaml")
+	t, err := template.ParseFiles("task-template.yaml")
 	if err != nil {
 		return "", err
 	}

@@ -244,6 +244,25 @@ func (ctl *DMMasterCtl) loadFinished(ctx context.Context, taskName string) (map[
 	return synced, nil
 }
 
+func (ctl *DMMasterCtl) StartTaskWithContent(ctx context.Context, content string, workers []string) error {
+	resp, err := ctl.client.StartTask(ctx, &pb.StartTaskRequest{
+		Task:    content,
+		Workers: workers,
+	})
+	if err != nil {
+		return errors.Trace(err)
+	}
+	for _, wp := range resp.GetWorkers() {
+		if !wp.GetResult() {
+			return errors.Errorf("fail to start task %v: %s", content, wp.GetMsg())
+		}
+	}
+
+	log.Infof("start task, response %+v", resp)
+
+	return nil
+}
+
 // StartTask starts task
 func (ctl *DMMasterCtl) StartTask(ctx context.Context, task string, workers []string) error {
 	/*
@@ -258,23 +277,7 @@ func (ctl *DMMasterCtl) StartTask(ctx context.Context, task string, workers []st
 	if err != nil {
 		return errors.Trace(err)
 	}
-
-	resp, err := ctl.client.StartTask(ctx, &pb.StartTaskRequest{
-		Task:    string(content),
-		Workers: workers,
-	})
-	if err != nil {
-		return errors.Trace(err)
-	}
-	for _, wp := range resp.GetWorkers() {
-		if !wp.GetResult() {
-			return errors.Errorf("fail to start task %v: %s", string(content), wp.GetMsg())
-		}
-	}
-
-	log.Infof("start task %s, response %+v", task, resp)
-
-	return nil
+	return ctl.StartTaskWithContent(ctx, string(content), workers)
 }
 
 // StopTask stops task
