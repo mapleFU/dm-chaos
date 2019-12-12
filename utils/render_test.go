@@ -12,3 +12,11 @@ func TestSyncSplitTemplate(t *testing.T) {
 	}
 	fmt.Println(s)
 }
+
+func TestTaskTemplateRender(t *testing.T) {
+	s, err := TaskTemplateRender("127.0.0.1",5)
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(s)
+}

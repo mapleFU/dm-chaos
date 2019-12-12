@@ -41,3 +41,22 @@ func SyncSplitTemplate(sourceHost, targetHost string, tableId int) (string, erro
 	}
 	return wbuf.String(), nil
 }
+
+func TaskTemplateRender(targetHost string, taskId int) (string, error) {
+	t, err := template.ParseFiles("../task-template.yaml")
+	if err != nil {
+		return "", err
+	}
+	var s string
+
+	wbuf := bytes.NewBufferString(s)
+
+	err = t.Execute(wbuf, map[string]string{
+		"TargetHost": targetHost,
+		"TestID": fmt.Sprint(taskId),
+	})
+	if err != nil {
+		return "", err
+	}
+	return wbuf.String(), nil
+}

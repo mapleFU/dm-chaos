@@ -1,4 +1,4 @@
-package main
+package checker
 
 import (
 	"database/sql"
@@ -23,9 +23,9 @@ func init()  {
  * This file is for some set up scripts, which will be used in
  */
 
-func setMaxBinlogSize()  {
-	DefaultInitSqls = append(DefaultInitSqls, fmt.Sprintf("SET @@GLOBAL.MAX_BINLOG_SIZE = %d;", maxBinlogSize))
-}
+//func setMaxBinlogSize()  {
+//	DefaultInitSqls = append(DefaultInitSqls, fmt.Sprintf("SET @@GLOBAL.MAX_BINLOG_SIZE = %d;", maxBinlogSize))
+//}
 
 
 // initialize databases
