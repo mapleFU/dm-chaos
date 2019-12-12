@@ -15,6 +15,7 @@ import (
 
 	//"github.com/joho/godotenv"
 	"github.com/juju/errors"
+	//check "github.com/mapleFU/dm-chaos/utils/sync_diff_inspector"
 	log "github.com/sirupsen/logrus"
 	//"github.com/juju/errors"
 )
@@ -185,12 +186,15 @@ func main() {
 	// drive ycsb to inserting datas
 	// this part will insert large
 	var wg sync.WaitGroup
-	for _, mysqlAdd := range testMysqlAddress {
+	for mysqlCnt, mysqlAdd := range testMysqlAddress {
 		wg.Add(1)
 		go func(remoteAddress string) {
 			defer wg.Done()
 
-			cmd := exec.Command("bash", "-c", fmt.Sprintf("bin/go-ycsb run mysql -P workload -p mysql.host=%v  -p mysql.port=3306", remoteAddress))
+			// TODO: using it to support different table name
+			cmd := exec.Command("bash", "-c",
+				fmt.Sprintf("bin/go-ycsb run mysql -P workload -p mysql.host=%v  -p mysql.port=3306 -tablename=usertable%d",
+					remoteAddress, mysqlCnt))
 			cmd.Stdout = os.Stdout
 			if err := cmd.Start(); err != nil {
 				log.Panic(err)
@@ -244,5 +248,7 @@ func main() {
 	}
 
 	// calling check split checker
+	for cnt, mysqlConnAddr := range testMysqlAddress {
 
+	}
 }
