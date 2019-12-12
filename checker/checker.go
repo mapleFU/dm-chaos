@@ -36,8 +36,10 @@ func ycsbInsertPhase(ycsbBianry , workloadPath string, sourceHosts []string) err
 			defer wg.Done()
 
 			cmd := exec.Command("bash", "-c",
-				fmt.Sprintf("%v run mysql -P %v -p mysql.host=%v -p mysql.port=3306 -p tablename=usertable%d",
+				fmt.Sprintf("%v run mysql -P %v -p mysql.host=%v -p mysql.port=3306 -p table=usertable%d",
 					ycsbBianry, workloadPath, remoteAddress, cnt))
+
+			log.Infof("Run command: ", cmd.String())
 
 			cmd.Stdout = os.Stdout
 
@@ -66,6 +68,8 @@ func ycsbInsertPhase(ycsbBianry , workloadPath string, sourceHosts []string) err
 func taskStartPhase(sourceHosts []string, targetHost string, ctl *dmctl.DMMasterCtl, templatePath string) error {
 	for id, _ := range sourceHosts {
 		fileTemplate, err := utils.TaskTemplateRender(targetHost, id, templatePath)
+		taskName := fmt.Sprintf("test%d", id)
+		ctl.StopTask(context.Background(), taskName, nil)
 		if err != nil {
 			return errors.Cause(err)
 		}
@@ -85,24 +89,19 @@ func waitForFinishingPhase(sourceHosts []string, ctl *dmctl.DMMasterCtl) error {
 		go func(taskId int) {
 			taskName := fmt.Sprintf("test%d", taskId)
 			defer wg.Done()
-			defer func() {
-				if r := recover(); r != nil {
-					ctl.StopTask(context.Background(), taskName, nil)
-				}
-			}()
-			resp, err := ctl.QueryStatus(context.Background(), taskName)
-			if err != nil {
-				errorsGroup[taskId] = err
-				panic(errors.ErrorStack(err))
-			}
 
 			finished := false
 			for finished != true {
-				tag := true
+				resp, err := ctl.QueryStatus(context.Background(), taskName)
+				if err != nil {
+					errorsGroup[taskId] = err
+					panic(errors.ErrorStack(err))
+				}
+				tag := false
 				for _, v := range resp {
 					for _, task := range v.SubTaskStatus {
-						if task.GetStage() != pb.Stage_Finished {
-							tag = false
+						if task.GetStage() == pb.Stage_Finished {
+							tag = true
 							break
 						}
 						if task.GetStage() == pb.Stage_InvalidStage || task.GetStage() == pb.Stage_Paused {
@@ -113,9 +112,12 @@ func waitForFinishingPhase(sourceHosts []string, ctl *dmctl.DMMasterCtl) error {
 				}
 				if tag {
 					finished = true
+				} else {
+					log.Infof("Waiting for task to finish.")
+					time.Sleep(1 * time.Second)
 				}
 			}
-			time.Sleep(1 * time.Second)
+
 		}(i)
 	}
 	// waiting all

@@ -1,7 +1,7 @@
 # 任务名，多个同时运行的任务不能重名。
 name: "test{{.TestID}}"
 # 全量+增量 (all) 同步模式。
-task-mode: "all"
+task-mode: "full"
 # 下游 TiDB 配置信息。
 target-database:
   host: "{{.TargetHost}}"
@@ -10,10 +10,20 @@ target-database:
   password: ""
 
 
-## ******** 功能配置集 **********
-black-white-list:        # 上游数据库实例匹配的表的 black & white list 过滤规则集
-  bw-rule-1:             # 黑白名单配置的名称
-    do-dbs: ["all_mode"] # 同步哪些库
+### ******** 功能配置集 **********
+#black-white-list:        # 上游数据库实例匹配的表的 black & white list 过滤规则集
+#  bw-rule-1:             # 黑白名单配置的名称
+#    do-dbs: ["all_mode"] # 同步哪些库
+
+black-white-list:                    # 上游数据库实例匹配的表的 black & white list 过滤规则集
+  bw-rule-1:                         # 配置名称
+    do-dbs: ["test"]     # 同步哪些库
+    do-tables:                       # 同步哪些表
+      - db-name: "test"
+        tbl-name: "usertable{{.TestID}}"
+    ignore-tables:                   # 忽略哪些表
+      - db-name: "user"
+        tbl-name: "log"
 
 # ----------- 实例配置 -----------
 mysql-instances:

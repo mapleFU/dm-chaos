@@ -40,12 +40,12 @@ func (cc *CheckerClient) CheckDatabase(syncDiffInspectorBinary, syncDiffInsTempl
 	cmd := exec.Command("bash", "-c",
 		fmt.Sprintf("%v -config %v", syncDiffInspectorBinary, f.Name()))
 
+	log.Infof("Run command %v", cmd.String())
+
 	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Fatalf("cmd.Run() failed with %s\n", err)
-	}
 	outs := string(out)
-	if strings.Contains(outs, "failed") {
+
+	if strings.Contains(outs, "fail") {
 		return false
 	} else {
 		return true
