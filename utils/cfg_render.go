@@ -21,9 +21,9 @@ func TaskTemplate()  {
 
 // source should be an mysql at 3306
 // target should be an tidb at 4000.
-func SyncSplitTemplate(sourceHost, targetHost string, tableId int) (string, error) {
+func SyncSplitTemplate(sourceHost, targetHost string, tableId int, path string) (string, error) {
 
-	t, err := template.ParseFiles("config-template.toml")
+	t, err := template.ParseFiles(path)
 	if err != nil {
 		return "", err
 	}
@@ -42,8 +42,8 @@ func SyncSplitTemplate(sourceHost, targetHost string, tableId int) (string, erro
 	return wbuf.String(), nil
 }
 
-func TaskTemplateRender(targetHost string, taskId int) (string, error) {
-	t, err := template.ParseFiles("task-template.yaml")
+func TaskTemplateRender(targetHost string, taskId int, path string) (string, error) {
+	t, err := template.ParseFiles(path)
 	if err != nil {
 		return "", err
 	}

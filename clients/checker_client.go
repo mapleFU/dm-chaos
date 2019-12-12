@@ -20,8 +20,8 @@ func NewChecker() *CheckerClient {
 }
 
 // check if the current database and target database is the same database.
-func (cc *CheckerClient) CheckDatabase(syncDiffInspectorBinary, sourceId, targetId string, tableId int) bool {
-	template, err := utils.SyncSplitTemplate(sourceId, targetId, tableId)
+func (cc *CheckerClient) CheckDatabase(syncDiffInspectorBinary, syncDiffInsTemplate, sourceId, targetId string, tableId int) bool {
+	template, err := utils.SyncSplitTemplate(sourceId, targetId, tableId, syncDiffInsTemplate)
 	if err != nil {
 		panic(err)
 	}
